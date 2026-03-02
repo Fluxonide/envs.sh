@@ -1,45 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <link href="styles.css" rel="stylesheet" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"
-      rel="stylesheet"
-    />
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Image Uploader</title>
-  </head>
-  <body>
-    <div class="container">
-      <h2 class="mt-5">Upload Image to envs.sh</h2>
-      <form id="upload-form" action="/upload" method="post" class="mt-4">
-        <div class="form-group">
-          <input
-            type="text"
-            class="form-control"
-            name="imageUrl"
-            placeholder="Enter direct image URL ≤ 5MB"
-          />
-        </div>
-        <input type="submit" class="btn btn-primary" value="Upload" />
-        <object
-          id="loading-svg"
-          class="spin"
-          data="spin.svg"
-          style="display: none"
-        >
-          Your browser does not support SVG
-        </object>
-        <div id="result" class="mt-4"></div>
-      </form>
-    </div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  <link href="styles.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" />
 
-    <script src="script.js"></script>
-  </body>
+  <title>Catbox.moe Uploader</title>
+</head>
+
+<body>
+  <div class="container">
+    <h2 class="mt-5">Upload to Catbox.moe</h2>
+    <form id="upload-form" action="/upload" method="post" class="mt-4">
+      <div class="form-group">
+        <input type="text" class="form-control" name="imageUrl" placeholder="Enter direct image URL ≤ 5MB" />
+      </div>
+      <input type="submit" class="btn btn-primary" value="Upload" />
+      <object id="loading-svg" class="spin" data="spin.svg" style="display: none">
+        Your browser does not support SVG
+      </object>
+      <div id="result" class="mt-4"></div>
+    </form>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+  <script src="script.js"></script>
+</body>
+
 </html>

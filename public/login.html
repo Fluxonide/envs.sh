@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="styles.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" />
+    <title>Login</title>
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="mt-5">Catbox Login</h2>
+        <form id="login-form" class="mt-4">
+            <div class="form-group">
+                <input type="text" id="userhash-input" class="form-control" placeholder="Enter your catbox userhash" />
+            </div>
+            <input type="submit" class="btn btn-primary" value="Save" />
+            <div id="status" class="mt-4"></div>
+        </form>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var saved = localStorage.getItem('catbox_userhash');
+            if (saved) {
+                document.getElementById('userhash-input').value = saved;
+                document.getElementById('status').textContent = '✅ Userhash is set';
+                document.getElementById('status').style.color = '#4caf50';
+            }
+
+            document.getElementById('login-form').addEventListener('submit', function (e) {
+                e.preventDefault();
+                var hash = document.getElementById('userhash-input').value.trim();
+                if (hash) {
+                    localStorage.setItem('catbox_userhash', hash);
+                    document.getElementById('status').textContent = '✅ Userhash saved!';
+                    document.getElementById('status').style.color = '#4caf50';
+                } else {
+                    localStorage.removeItem('catbox_userhash');
+                    document.getElementById('status').textContent = '🗑️ Userhash cleared';
+                    document.getElementById('status').style.color = '#f44336';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

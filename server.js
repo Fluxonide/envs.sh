@@ -27,8 +27,12 @@ function getExtension(contentType) {
   return map[(contentType || "").split(";")[0].trim().toLowerCase()] || "jpg";
 }
 
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
 app.post("/upload", async (req, res) => {
-  const { imageUrl } = req.body;
+  const { imageUrl, userhash } = req.body;
 
   if (!imageUrl) {
     return res.status(400).send("No image URL provided.");
@@ -48,6 +52,9 @@ app.post("/upload", async (req, res) => {
     // Step 2: Upload to catbox as a file
     const form = new FormData();
     form.append("reqtype", "fileupload");
+    if (userhash) {
+      form.append("userhash", userhash);
+    }
     form.append("fileToUpload", downloadResponse.data, { filename });
 
     const uploadResponse = await axios({

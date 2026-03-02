@@ -10,6 +10,23 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, "public")));
 
+// Map content-type to file extension
+function getExtension(contentType) {
+  const map = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/gif": "gif",
+    "image/webp": "webp",
+    "image/svg+xml": "svg",
+    "image/bmp": "bmp",
+    "image/tiff": "tiff",
+    "video/mp4": "mp4",
+    "video/webm": "webm",
+    "application/pdf": "pdf",
+  };
+  return map[(contentType || "").split(";")[0].trim().toLowerCase()] || "jpg";
+}
+
 app.post("/upload", async (req, res) => {
   const { imageUrl } = req.body;
 
@@ -18,15 +35,28 @@ app.post("/upload", async (req, res) => {
   }
 
   try {
+    // Step 1: Download the file from the URL
+    const downloadResponse = await axios({
+      method: "GET",
+      url: imageUrl,
+      responseType: "stream",
+    });
+
+    const ext = getExtension(downloadResponse.headers["content-type"]);
+    const filename = `upload.${ext}`;
+
+    // Step 2: Upload to catbox as a file
     const form = new FormData();
-    form.append("reqtype", "urlupload");
-    form.append("url", imageUrl);
+    form.append("reqtype", "fileupload");
+    form.append("fileToUpload", downloadResponse.data, { filename });
 
     const uploadResponse = await axios({
       method: "POST",
       url: "https://catbox.moe/user/api.php",
       data: form,
       headers: form.getHeaders(),
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
     });
 
     const resultUrl = String(uploadResponse.data).trim();

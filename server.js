@@ -29,8 +29,9 @@ app.post("/upload", async (req, res) => {
       headers: form.getHeaders(),
     });
 
-    console.log("Upload Response:", uploadResponse.data);
-    res.send(uploadResponse.data);
+    const resultUrl = String(uploadResponse.data).trim();
+    console.log("Upload Response:", resultUrl);
+    res.json({ url: resultUrl });
   } catch (error) {
     console.error("Error during upload:", {
       message: error.message,

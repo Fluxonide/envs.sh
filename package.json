@@ -1,7 +1,7 @@
 {
     "name": "image-uploader",
     "version": "1.0.0",
-    "description": "Upload images to telegra.ph",
+    "description": "Upload files to catbox.moe",
     "main": "server.js",
     "scripts": {
         "start": "node server.js",

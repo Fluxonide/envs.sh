@@ -62,9 +62,19 @@ app.post("/api/upload/url", async (req: Request, res: Response): Promise<void> =
         });
 
         const ext = getExtension(downloadResponse.headers["content-type"]);
-        // Extract filename from URL path, fallback to upload.ext
-        const urlPath = new URL(imageUrl).pathname;
-        const urlFilename = urlPath.split("/").pop();
+        // For weserv proxy URLs, extract the inner URL for a better filename
+        let sourceUrl = imageUrl;
+        try {
+            const parsed = new URL(imageUrl);
+            if (parsed.hostname.includes("weserv.nl") && parsed.searchParams.has("url")) {
+                sourceUrl = parsed.searchParams.get("url")!;
+            }
+        } catch { }
+        // Extract filename from URL path, strip query params, fallback to upload.ext
+        const urlPath = new URL(sourceUrl).pathname;
+        let urlFilename = urlPath.split("/").pop() || "";
+        // Remove any query string or fragment that may have leaked into the filename
+        urlFilename = urlFilename.split("?")[0].split("&")[0].split("#")[0];
         const filename = urlFilename && urlFilename.includes(".") ? urlFilename : `upload.${ext}`;
 
         const form = new FormData();
@@ -297,8 +307,16 @@ app.post("/upload", async (req: Request, res: Response): Promise<void> => {
         });
 
         const ext = getExtension(downloadResponse.headers["content-type"]);
-        const urlPath = new URL(imageUrl).pathname;
-        const urlFilename = urlPath.split("/").pop();
+        let sourceUrl = imageUrl;
+        try {
+            const parsed = new URL(imageUrl);
+            if (parsed.hostname.includes("weserv.nl") && parsed.searchParams.has("url")) {
+                sourceUrl = parsed.searchParams.get("url")!;
+            }
+        } catch { }
+        const urlPath = new URL(sourceUrl).pathname;
+        let urlFilename = urlPath.split("/").pop() || "";
+        urlFilename = urlFilename.split("?")[0].split("&")[0].split("#")[0];
         const filename = urlFilename && urlFilename.includes(".") ? urlFilename : `upload.${ext}`;
 
         const form = new FormData();

@@ -1,32 +1,33 @@
 {
-    "name": "CatInBox",
-    "version": "1.0.0",
-    "description": "Upload files to catbox.moe — TypeScript + React",
-    "main": "dist/server.js",
-    "scripts": {
-        "dev": "tsx src/server.ts",
-        "build:server": "tsc",
-        "build:client": "cd client && npm install && npm run build",
-        "build": "npm run build:server && npm run build:client",
-        "start": "node dist/server.js",
-        "vercel-build": "npm run build:server && npm run build:client"
-    },
-    "engines": {
-        "node": "20.x"
-    },
-    "dependencies": {
-        "axios": "^1.7.0",
-        "cors": "^2.8.5",
-        "express": "^4.19.2",
-        "form-data": "^4.0.0",
-        "multer": "^1.4.5-lts.1"
-    },
-    "devDependencies": {
-        "@types/cors": "^2.8.17",
-        "@types/express": "^4.17.21",
-        "@types/multer": "^1.4.12",
-        "@types/node": "^20.11.0",
-        "tsx": "^4.7.0",
-        "typescript": "^5.3.3"
-    }
+  "name": "CatInBox",
+  "version": "1.0.0",
+  "description": "Upload files to catbox.moe — TypeScript + React",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "cd client && npm run dev",
+    "dev:server": "tsx src/server.ts",
+    "build:server": "tsc",
+    "build:client": "cd client && npm install && npm run build",
+    "build": "npm run build:server && npm run build:client",
+    "start": "node dist/server.js",
+    "vercel-build": "npm run build:server && npm run build:client"
+  },
+  "engines": {
+    "node": "20.x"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "form-data": "^4.0.0",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
 }

@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import UploadHistory from "../components/UploadHistory";
 
 interface UploadResult {
     url: string;
@@ -19,24 +18,16 @@ export default function Upload() {
     const [error, setError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
     const [dragActive, setDragActive] = useState(false);
-    const [history, setHistory] = useState<UploadResult[]>(() => {
-        try {
-            return JSON.parse(localStorage.getItem("upload_history") || "[]");
-        } catch {
-            return [];
-        }
-    });
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const saveToHistory = (item: UploadResult) => {
-        const updated = [item, ...history].slice(0, 50);
-        setHistory(updated);
-        localStorage.setItem("upload_history", JSON.stringify(updated));
-    };
-
-    const clearHistory = () => {
-        setHistory([]);
-        localStorage.removeItem("upload_history");
+        try {
+            const existing: UploadResult[] = JSON.parse(localStorage.getItem("upload_history") || "[]");
+            const updated = [item, ...existing].slice(0, 50);
+            localStorage.setItem("upload_history", JSON.stringify(updated));
+        } catch {
+            localStorage.setItem("upload_history", JSON.stringify([item]));
+        }
     };
 
     const handleUpload = async () => {
@@ -199,7 +190,7 @@ export default function Upload() {
     return (
         <div className="upload-page">
             <div className="page-header">
-                <h1>Upload to Catbox</h1>
+                <h1>Upload to CatInBox</h1>
                 <p className="page-subtitle">
                     Share files instantly. Up to 200MB per file, no account needed.
                 </p>
@@ -375,8 +366,6 @@ export default function Upload() {
                 </div>
             )}
 
-            {/* History */}
-            <UploadHistory history={history} onClear={clearHistory} />
         </div>
     );
 }

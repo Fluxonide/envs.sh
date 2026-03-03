@@ -1,5 +1,5 @@
 /* ===================================================================
-   envs.sh — Clean Minimal Design
+   CatInBox — Clean Minimal Design
    =================================================================== */
 
 *,
@@ -1058,6 +1058,114 @@ a:hover {
     border-top-color: #111;
 }
 
+/* --- Resize Panel --- */
+.resize-panel {
+    margin-bottom: 18px;
+    padding: 0;
+    animation: fade-in 0.3s ease-out;
+    overflow: hidden;
+}
+
+.resize-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 20px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: var(--font);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.resize-toggle:hover {
+    color: var(--text);
+}
+
+.resize-toggle.active {
+    color: var(--text);
+}
+
+.resize-chevron {
+    margin-left: auto;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.resize-chevron.open {
+    transform: rotate(180deg);
+}
+
+.resize-body {
+    padding: 0 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: fade-in 0.25s ease-out;
+}
+
+.resize-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.resize-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.resize-field label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.resize-input {
+    padding: 10px 12px !important;
+    padding-left: 12px !important;
+    font-size: 0.9rem !important;
+    border-radius: 8px !important;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.resize-input::-webkit-outer-spin-button,
+.resize-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+
+.resize-preview {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    max-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.resize-preview img {
+    max-width: 100%;
+    max-height: 280px;
+    object-fit: contain;
+    display: block;
+}
+
+.resize-url-row {
+    display: flex;
+    gap: 10px;
+}
+
 /* --- Footer --- */
 .footer {
     text-align: center;
@@ -1102,5 +1210,13 @@ a:hover {
     .nav-link {
         padding: 8px 10px;
         font-size: 0.82rem;
+    }
+
+    .resize-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .resize-url-row {
+        flex-direction: column;
     }
 }

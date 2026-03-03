@@ -1,9 +1,19 @@
 import { useState, useEffect } from "react";
 
+interface UploadResult {
+    url: string;
+    filename: string;
+    size?: number;
+    timestamp: number;
+}
+
 export default function Settings() {
     const [userhash, setUserhash] = useState("");
     const [saved, setSaved] = useState(false);
     const [cleared, setCleared] = useState(false);
+    const [cookieInput, setCookieInput] = useState("");
+    const [syncing, setSyncing] = useState(false);
+    const [syncResult, setSyncResult] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
     useEffect(() => {
         const stored = localStorage.getItem("catbox_userhash");
@@ -22,6 +32,59 @@ export default function Settings() {
             setCleared(true);
             setSaved(false);
             setTimeout(() => setCleared(false), 3000);
+        }
+    };
+
+    const handleSync = async () => {
+        if (!cookieInput.trim()) {
+            setSyncResult({ msg: "Please paste your cookies JSON", type: "error" });
+            setTimeout(() => setSyncResult(null), 3000);
+            return;
+        }
+
+        setSyncing(true);
+        setSyncResult(null);
+        try {
+            const res = await fetch("/api/fetch-files", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ cookies: cookieInput.trim() }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Fetch failed");
+
+            const fetched: UploadResult[] = (data.files || []).map(
+                (f: { url: string; filename: string; size: string; date: string }) => {
+                    const sizeMatch = f.size.match(/([\d.]+)\s*MB/i);
+                    const sizeBytes = sizeMatch ? Math.round(parseFloat(sizeMatch[1]) * 1024 * 1024) : undefined;
+                    const ts = new Date(f.date.replace(" ", "T") + "Z").getTime() || Date.now();
+                    return { url: f.url, filename: f.filename, size: sizeBytes, timestamp: ts };
+                }
+            );
+
+            // Merge with existing history, deduplicate by URL
+            let existing: UploadResult[] = [];
+            try {
+                existing = JSON.parse(localStorage.getItem("upload_history") || "[]");
+            } catch { /* empty */ }
+
+            const existingUrls = new Set(existing.map((h) => h.url));
+            const newFiles = fetched.filter((f) => !existingUrls.has(f.url));
+            const merged = [...existing, ...newFiles].sort((a, b) => b.timestamp - a.timestamp);
+
+            localStorage.setItem("upload_history", JSON.stringify(merged));
+
+            setSyncResult({
+                msg: `Synced ${data.total} files (${newFiles.length} new). Check History tab.`,
+                type: "success",
+            });
+            setCookieInput("");
+        } catch (err: unknown) {
+            const e = err as Error;
+            setSyncResult({ msg: e.message || "Sync failed", type: "error" });
+        } finally {
+            setSyncing(false);
+            setTimeout(() => setSyncResult(null), 5000);
         }
     };
 
@@ -99,6 +162,64 @@ export default function Settings() {
 
                 <div className="settings-section">
                     <div className="settings-label">
+                        <h3>Sync from Catbox Account</h3>
+                        <p>
+                            Paste your catbox.moe browser cookies to import all your
+                            account files into History. Supports JSON and Netscape format.
+                            Export using{" "}
+                            <a href="https://chromewebstore.google.com/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkalmdm" target="_blank" rel="noopener noreferrer">
+                                Cookie-Editor
+                            </a>.
+                        </p>
+                    </div>
+
+                    <textarea
+                        className="sync-textarea"
+                        placeholder='JSON: [{"name":"PHPSESSID","value":"..."}] or Netscape format'
+                        value={cookieInput}
+                        onChange={(e) => setCookieInput(e.target.value)}
+                        rows={4}
+                        disabled={syncing}
+                    />
+                    <button
+                        className="sync-btn"
+                        onClick={handleSync}
+                        disabled={syncing || !cookieInput.trim()}
+                    >
+                        {syncing ? (
+                            <><span className="spinner" /> Fetching files...</>
+                        ) : (
+                            <>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="23 4 23 10 17 10" />
+                                    <polyline points="1 20 1 14 7 14" />
+                                    <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                                </svg>
+                                Import Files
+                            </>
+                        )}
+                    </button>
+
+                    {syncResult && (
+                        <div className={`toast ${syncResult.type === "success" ? "toast-success" : "toast-error"}`}>
+                            {syncResult.type === "success" ? (
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                            ) : (
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="15" y1="9" x2="9" y2="15" />
+                                    <line x1="9" y1="9" x2="15" y2="15" />
+                                </svg>
+                            )}
+                            {syncResult.msg}
+                        </div>
+                    )}
+                </div>
+
+                <div className="settings-section">
+                    <div className="settings-label">
                         <h3>About</h3>
                         <p>
                             envs.sh is a modern file uploader that uses{" "}
@@ -119,3 +240,4 @@ export default function Settings() {
         </div>
     );
 }
+

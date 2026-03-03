@@ -144,6 +144,142 @@ app.post("/api/upload/file", upload.single("file"), async (req: Request, res: Re
     }
 });
 
+// Delete files from catbox
+app.post("/api/delete", async (req: Request, res: Response): Promise<void> => {
+    const { files, userhash } = req.body as { files?: string; userhash?: string };
+
+    if (!files || !userhash) {
+        res.status(400).json({ error: "Both 'files' and 'userhash' are required." });
+        return;
+    }
+
+    try {
+        const form = new FormData();
+        form.append("reqtype", "deletefiles");
+        form.append("userhash", userhash);
+        form.append("files", files);
+
+        const response = await axios({
+            method: "POST",
+            url: "https://catbox.moe/user/api.php",
+            data: form,
+            headers: form.getHeaders(),
+        });
+
+        const result = String(response.data).trim();
+        console.log("Delete Response:", result);
+        res.json({ success: true, message: result });
+    } catch (error: unknown) {
+        const err = error as { message: string; response?: { data: unknown } };
+        console.error("Error during delete:", {
+            message: err.message,
+            response: err.response ? err.response.data : "No response data",
+        });
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Fetch files from catbox account using session cookies
+app.post("/api/fetch-files", async (req: Request, res: Response): Promise<void> => {
+    const { cookies } = req.body as { cookies?: string };
+
+    if (!cookies) {
+        res.status(400).json({ error: "Cookies are required." });
+        return;
+    }
+
+    try {
+        // Parse cookies — supports JSON array or Netscape cookie file format
+        let cookieString: string;
+        const trimmed = cookies.trim();
+
+        if (trimmed.startsWith("[")) {
+            // JSON format: [{"name":"X","value":"Y"}, ...]
+            try {
+                const cookieArray: Array<{ name: string; value: string }> = JSON.parse(trimmed);
+                cookieString = cookieArray.map((c) => `${c.name}=${c.value}`).join("; ");
+            } catch {
+                res.status(400).json({ error: "Invalid cookies JSON format." });
+                return;
+            }
+        } else {
+            // Netscape cookie file format — tab-separated lines:
+            // domain  flag  path  secure  expiry  name  value
+            const lines = trimmed.split("\n").filter((l) => l.trim() && !l.startsWith("#"));
+            const pairs: string[] = [];
+            for (const line of lines) {
+                const parts = line.split("\t");
+                if (parts.length >= 7) {
+                    pairs.push(`${parts[5].trim()}=${parts[6].trim()}`);
+                }
+            }
+            if (pairs.length === 0) {
+                res.status(400).json({ error: "Could not parse cookies. Use JSON array or Netscape format." });
+                return;
+            }
+            cookieString = pairs.join("; ");
+        }
+
+        const allFiles: Array<{ url: string; filename: string; size: string; date: string }> = [];
+        let page = 1;
+        let hasMore = true;
+
+        while (hasMore) {
+            const pageUrl = `https://catbox.moe/user/view.php?page=${page}&sortby=newest`;
+            const response = await axios({
+                method: "GET",
+                url: pageUrl,
+                headers: {
+                    Cookie: cookieString,
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                },
+                timeout: 15000,
+            });
+
+            const html = String(response.data);
+
+            // Check if we got redirected to login (no results div or login form)
+            if (html.includes("Sign up") && !html.includes("grid-bounds")) {
+                res.status(401).json({ error: "Cookies are invalid or expired. Please update your cookies." });
+                return;
+            }
+
+            // Parse file entries from div.col-1-8 elements
+            const fileRegex = /<div class='col-1-8'><a href='(https:\/\/files\.catbox\.moe\/[^']+)'[^>]*>.*?<a class='linkbutton'[^>]*>([^<]+)<\/a>\s*<p>\s*([^<]+)<\/p><p>([^<]+)<\/p>/g;
+            let match;
+            let foundOnPage = 0;
+
+            while ((match = fileRegex.exec(html)) !== null) {
+                allFiles.push({
+                    url: match[1].trim(),
+                    filename: match[2].trim(),
+                    date: match[3].trim(),
+                    size: match[4].trim(),
+                });
+                foundOnPage++;
+            }
+
+            // Check pagination: if current page link exists for next page
+            const nextPage = page + 1;
+            if (html.includes(`page=${nextPage}`) && foundOnPage > 0) {
+                page = nextPage;
+            } else {
+                hasMore = false;
+            }
+        }
+
+        console.log(`Fetched ${allFiles.length} files from catbox account across ${page} page(s)`);
+        res.json({ files: allFiles, total: allFiles.length });
+    } catch (error: unknown) {
+        const err = error as { message: string; response?: { data: unknown } };
+        console.error("Error fetching files:", {
+            message: err.message,
+            response: err.response ? err.response.data : "No response data",
+        });
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Legacy endpoint for backward compatibility
 app.post("/upload", async (req: Request, res: Response): Promise<void> => {
     const { imageUrl, userhash } = req.body as { imageUrl?: string; userhash?: string };

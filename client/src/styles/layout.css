@@ -1,0 +1,131 @@
+/* --- Shell --- */
+.app-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Header --- */
+.header {
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+}
+
+.header-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: var(--text) !important;
+    text-decoration: none;
+}
+
+.logo-icon {
+    font-size: 1.2rem;
+}
+
+.logo-text {
+    color: var(--text);
+}
+
+.nav {
+    display: flex;
+    gap: 2px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-link:hover {
+    color: var(--text);
+}
+
+.nav-link.active {
+    color: var(--text);
+    background: var(--bg-raised);
+}
+
+/* --- Main --- */
+.main-content {
+    flex: 1;
+    max-width: 720px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+}
+
+/* Page-level animations */
+.upload-page,
+.history-page,
+.settings-page {
+    animation: page-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes page-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- Page Header --- */
+.page-header {
+    margin-bottom: 32px;
+}
+
+.page-header h1 {
+    font-size: 1.85rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.page-subtitle {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+}
+
+/* --- Cards --- */
+.glass-card {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    transition: border-color 0.25s ease;
+}
+
+/* --- Footer --- */
+.footer {
+    text-align: center;
+    padding: 14px 24px;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    border-top: 1px solid var(--border);
+}

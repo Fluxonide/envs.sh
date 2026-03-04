@@ -70,51 +70,73 @@ export default function Upload() {
         const userhash = localStorage.getItem("catbox_userhash") || "";
 
         try {
-            let res: Response;
-
             if (mode === "url") {
                 if (!url.trim()) {
                     setError("Please enter a URL");
                     setUploading(false);
                     return;
                 }
-                res = await fetch("/api/upload/url", {
+                const res = await fetch("/api/upload/url", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ imageUrl: url.trim(), userhash }),
                 });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || "Upload failed");
+                }
+
+                const uploadResult: UploadResult = {
+                    url: data.url,
+                    filename: data.filename || url.split("/").pop() || "file",
+                    size: data.size,
+                    timestamp: Date.now(),
+                };
+
+                setResult(uploadResult);
+                saveToHistory(uploadResult);
+                setUrl("");
+                setFile(null);
             } else {
                 if (!file) {
                     setError("Please select a file");
                     setUploading(false);
                     return;
                 }
+
+                // Upload directly to Catbox — bypasses Vercel's 4.5MB limit
                 const formData = new FormData();
-                formData.append("file", file);
+                formData.append("reqtype", "fileupload");
                 if (userhash) formData.append("userhash", userhash);
-                res = await fetch("/api/upload/file", {
+                formData.append("fileToUpload", file, file.name);
+
+                const catboxRes = await fetch("https://catbox.moe/user/api.php", {
                     method: "POST",
                     body: formData,
                 });
+
+                if (!catboxRes.ok) {
+                    throw new Error("Upload failed — Catbox returned an error");
+                }
+
+                const resultUrl = (await catboxRes.text()).trim();
+                if (!resultUrl.startsWith("http")) {
+                    throw new Error(resultUrl || "Upload failed");
+                }
+
+                const uploadResult: UploadResult = {
+                    url: resultUrl,
+                    filename: file.name,
+                    size: file.size,
+                    timestamp: Date.now(),
+                };
+
+                setResult(uploadResult);
+                saveToHistory(uploadResult);
+                setUrl("");
+                setFile(null);
             }
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.error || "Upload failed");
-            }
-
-            const uploadResult: UploadResult = {
-                url: data.url,
-                filename: data.filename || (mode === "url" ? url.split("/").pop() || "file" : file?.name || "file"),
-                size: data.size || file?.size,
-                timestamp: Date.now(),
-            };
-
-            setResult(uploadResult);
-            saveToHistory(uploadResult);
-            setUrl("");
-            setFile(null);
         } catch (err: unknown) {
             const e = err as Error;
             setError(e.message || "Upload failed");

@@ -1,0 +1,44 @@
+@media (max-width: 640px) {
+    .main-content {
+        padding: 28px 16px 48px;
+    }
+
+    .page-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .result-url-row {
+        flex-direction: column;
+    }
+
+    .settings-input-group {
+        flex-direction: column;
+    }
+
+    .save-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .history-card-thumb {
+        width: 40px;
+        height: 40px;
+    }
+
+    .nav {
+        gap: 0;
+    }
+
+    .nav-link {
+        padding: 8px 10px;
+        font-size: 0.82rem;
+    }
+
+    .resize-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .resize-url-row {
+        flex-direction: column;
+    }
+}

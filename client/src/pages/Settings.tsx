@@ -62,11 +62,24 @@ export default function Settings() {
                 }
             );
 
-            // Merge with existing history, deduplicate by URL
+            // Merge with existing history, deduplicate by URL, update missing sizes
             let existing: UploadResult[] = [];
             try {
                 existing = JSON.parse(localStorage.getItem("upload_history") || "[]");
             } catch { /* empty */ }
+
+            // Build a lookup from fetched data for size updates
+            const fetchedMap = new Map(fetched.map((f) => [f.url, f]));
+            let updatedCount = 0;
+
+            // Update existing entries that are missing size
+            existing = existing.map((entry) => {
+                if (!entry.size && fetchedMap.has(entry.url)) {
+                    const fetSize = fetchedMap.get(entry.url)!.size;
+                    if (fetSize) { updatedCount++; return { ...entry, size: fetSize }; }
+                }
+                return entry;
+            });
 
             const existingUrls = new Set(existing.map((h) => h.url));
             const newFiles = fetched.filter((f) => !existingUrls.has(f.url));
@@ -74,8 +87,10 @@ export default function Settings() {
 
             localStorage.setItem("upload_history", JSON.stringify(merged));
 
+            const parts = [`${newFiles.length} new`];
+            if (updatedCount) parts.push(`${updatedCount} updated`);
             setSyncResult({
-                msg: `Synced ${data.total} files (${newFiles.length} new). Check History tab.`,
+                msg: `Synced ${data.total} files (${parts.join(", ")}). Check History tab.`,
                 type: "success",
             });
             setCookieInput("");

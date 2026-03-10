@@ -179,7 +179,12 @@ export default function History() {
                 </div>
             )}
 
-            {history.length === 0 ? (
+            {loading ? (
+                <div className="history-empty glass-card">
+                    <span className="spinner" />
+                    <p>Loading history...</p>
+                </div>
+            ) : history.length === 0 ? (
                 <div className="history-empty glass-card">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10" />
@@ -237,6 +242,7 @@ export default function History() {
                                         <span className="history-card-meta">
                                             {item.size ? formatSize(item.size) + " · " : ""}
                                             {formatTime(item.timestamp)}
+                                            {item.source === "telegram" ? " · 📱 Telegram" : ""}
                                         </span>
                                     </div>
 

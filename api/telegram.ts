@@ -11,17 +11,30 @@ interface TelegramUpdate {
     chat: { id: number };
     text?: string;
     photo?: Array<{ file_id: string; file_size?: number }>;
-    document?: { file_id: string; file_name?: string; mime_type?: string; file_size?: number };
-    video?: { file_id: string; file_name?: string; mime_type?: string; file_size?: number };
+    document?: {
+      file_id: string;
+      file_name?: string;
+      mime_type?: string;
+      file_size?: number;
+    };
+    video?: {
+      file_id: string;
+      file_name?: string;
+      mime_type?: string;
+      file_size?: number;
+    };
   };
 }
 
-async function saveToHistory(url: string, filename: string, size: number, telegramUserId: number): Promise<void> {
+async function saveToHistory(
+  url: string,
+  filename: string,
+  size: number,
+  telegramUserId: number,
+): Promise<void> {
   try {
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : "http://localhost:3000";
-    
+    const baseUrl = "https://catinbox.vercel.app";
+
     await axios({
       method: "POST",
       url: `${baseUrl}/api/history`,
@@ -39,10 +52,18 @@ async function saveToHistory(url: string, filename: string, size: number, telegr
   }
 }
 
-async function uploadToCatbox(fileBuffer: Buffer, filename: string): Promise<string> {
+async function uploadToCatbox(
+  fileBuffer: Buffer,
+  filename: string,
+): Promise<string> {
   const form = new FormData();
   form.append("reqtype", "fileupload");
   form.append("fileToUpload", fileBuffer, { filename });
+
+  const userhash = process.env.CATBOX_USERHASH;
+  if (userhash) {
+    form.append("userhash", userhash);
+  }
 
   const response = await axios({
     method: "POST",
@@ -56,7 +77,10 @@ async function uploadToCatbox(fileBuffer: Buffer, filename: string): Promise<str
   return String(response.data).trim();
 }
 
-export default async function handler(req: Request, res: Response): Promise<void> {
+export default async function handler(
+  req: Request,
+  res: Response,
+): Promise<void> {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -84,7 +108,7 @@ export default async function handler(req: Request, res: Response): Promise<void
       if (text === "/start") {
         await bot.sendMessage(
           chatId,
-          "Welcome! Send me a file, photo, video, or a URL and I'll upload it to Catbox for you."
+          "Welcome! Send me a file, photo, video, or a URL and I'll upload it to Catbox for you.",
         );
       } else if (text.startsWith("http://") || text.startsWith("https://")) {
         // Handle URL upload
@@ -104,14 +128,20 @@ export default async function handler(req: Request, res: Response): Promise<void
 
           const catboxUrl = await uploadToCatbox(buffer, filename);
           await saveToHistory(catboxUrl, filename, buffer.length, chatId);
-          await bot.sendMessage(chatId, `✅ Uploaded successfully!\n\n${catboxUrl}`);
+          await bot.sendMessage(
+            chatId,
+            `✅ Uploaded successfully!\n\n${catboxUrl}`,
+          );
         } catch (error) {
-          await bot.sendMessage(chatId, `❌ Error: ${(error as Error).message}`);
+          await bot.sendMessage(
+            chatId,
+            `❌ Error: ${(error as Error).message}`,
+          );
         }
       } else {
         await bot.sendMessage(
           chatId,
-          "Send me a file, photo, video, or a valid URL to upload to Catbox."
+          "Send me a file, photo, video, or a valid URL to upload to Catbox.",
         );
       }
     }
@@ -158,7 +188,8 @@ export default async function handler(req: Request, res: Response): Promise<void
         });
 
         const buffer = Buffer.from(downloadResponse.data);
-        const filename = fileData!.file_name || file.file_path?.split("/").pop() || "file";
+        const filename =
+          fileData!.file_name || file.file_path?.split("/").pop() || "file";
 
         const catboxUrl = await uploadToCatbox(buffer, filename);
         await saveToHistory(catboxUrl, filename, buffer.length, chatId);

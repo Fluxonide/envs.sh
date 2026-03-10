@@ -16,6 +16,29 @@ interface TelegramUpdate {
   };
 }
 
+async function saveToHistory(url: string, filename: string, size: number, telegramUserId: number): Promise<void> {
+  try {
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : "http://localhost:3000";
+    
+    await axios({
+      method: "POST",
+      url: `${baseUrl}/api/history`,
+      data: {
+        url,
+        filename,
+        size,
+        source: "telegram",
+        telegramUserId,
+      },
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Failed to save to history:", error);
+  }
+}
+
 async function uploadToCatbox(fileBuffer: Buffer, filename: string): Promise<string> {
   const form = new FormData();
   form.append("reqtype", "fileupload");
@@ -80,6 +103,7 @@ export default async function handler(req: Request, res: Response): Promise<void
           const filename = urlPath.split("/").pop() || "file";
 
           const catboxUrl = await uploadToCatbox(buffer, filename);
+          await saveToHistory(catboxUrl, filename, buffer.length, chatId);
           await bot.sendMessage(chatId, `✅ Uploaded successfully!\n\n${catboxUrl}`);
         } catch (error) {
           await bot.sendMessage(chatId, `❌ Error: ${(error as Error).message}`);
@@ -111,6 +135,7 @@ export default async function handler(req: Request, res: Response): Promise<void
         const filename = file.file_path?.split("/").pop() || "photo.jpg";
 
         const catboxUrl = await uploadToCatbox(buffer, filename);
+        await saveToHistory(catboxUrl, filename, buffer.length, chatId);
         await bot.sendMessage(chatId, `✅ Photo uploaded!\n\n${catboxUrl}`);
       } catch (error) {
         await bot.sendMessage(chatId, `❌ Error: ${(error as Error).message}`);
@@ -136,6 +161,7 @@ export default async function handler(req: Request, res: Response): Promise<void
         const filename = fileData!.file_name || file.file_path?.split("/").pop() || "file";
 
         const catboxUrl = await uploadToCatbox(buffer, filename);
+        await saveToHistory(catboxUrl, filename, buffer.length, chatId);
         await bot.sendMessage(chatId, `✅ File uploaded!\n\n${catboxUrl}`);
       } catch (error) {
         await bot.sendMessage(chatId, `❌ Error: ${(error as Error).message}`);

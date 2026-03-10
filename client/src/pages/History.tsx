@@ -5,6 +5,8 @@ interface UploadResult {
     filename: string;
     size?: number;
     timestamp: number;
+    source?: "web" | "telegram";
+    telegramUserId?: number;
 }
 
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"];
@@ -50,17 +52,34 @@ export default function History() {
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
     const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
     const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
     const userhash = localStorage.getItem("catbox_userhash") || "";
 
     useEffect(() => {
+        fetchHistory();
+    }, []);
+
+    const fetchHistory = async () => {
         try {
+            setLoading(true);
+            const res = await fetch("/api/history");
+            const data = await res.json();
+            if (res.ok) {
+                setHistory(data.history || []);
+            } else {
+                // Fallback to localStorage if server fails
+                const stored = JSON.parse(localStorage.getItem("upload_history") || "[]");
+                setHistory(stored);
+            }
+        } catch {
+            // Fallback to localStorage
             const stored = JSON.parse(localStorage.getItem("upload_history") || "[]");
             setHistory(stored);
-        } catch {
-            setHistory([]);
+        } finally {
+            setLoading(false);
         }
-    }, []);
+    };
 
     const showToast = (msg: string, type: "success" | "error") => {
         setToast({ msg, type });

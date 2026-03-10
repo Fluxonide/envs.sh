@@ -47,17 +47,39 @@ export default function Upload() {
     const [resizeHeight, setResizeHeight] = useState("");
     const [resizeCopied, setResizeCopied] = useState(false);
 
-    const saveToHistory = (item: UploadResult): boolean => {
+    const saveToHistory = async (item: UploadResult): Promise<boolean> => {
         try {
+            // Save to server
+            await fetch("/api/history", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    url: item.url,
+                    filename: item.filename,
+                    size: item.size,
+                    source: "web",
+                }),
+            });
+
+            // Also save to localStorage as backup
             const existing: UploadResult[] = JSON.parse(localStorage.getItem("upload_history") || "[]");
             // Skip if URL already exists (Catbox returns same URL for duplicate files)
             if (existing.some((e) => e.url === item.url)) return false;
-            const updated = [item, ...existing].slice(0, 50);
+            const updated = [item, ...existing].slice(0, 200);
             localStorage.setItem("upload_history", JSON.stringify(updated));
             return true;
         } catch {
-            localStorage.setItem("upload_history", JSON.stringify([item]));
-            return true;
+            // Fallback to localStorage only
+            try {
+                const existing: UploadResult[] = JSON.parse(localStorage.getItem("upload_history") || "[]");
+                if (existing.some((e) => e.url === item.url)) return false;
+                const updated = [item, ...existing].slice(0, 200);
+                localStorage.setItem("upload_history", JSON.stringify(updated));
+                return true;
+            } catch {
+                localStorage.setItem("upload_history", JSON.stringify([item]));
+                return true;
+            }
         }
     };
 

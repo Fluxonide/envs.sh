@@ -91,21 +91,12 @@ export default function History() {
   const fetchHistory = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/history");
-      const data = await res.json();
-      if (res.ok) {
-        setHistory(data.history || []);
-      } else {
-        // Fallback to localStorage if server fails
-        const stored = JSON.parse(
-          localStorage.getItem("upload_history") || "[]",
-        );
-        setHistory(stored);
-      }
-    } catch {
-      // Fallback to localStorage
+      // Load directly from localStorage since we don't have server persistence
       const stored = JSON.parse(localStorage.getItem("upload_history") || "[]");
       setHistory(stored);
+    } catch (error) {
+      console.error("Failed to load history:", error);
+      setHistory([]);
     } finally {
       setLoading(false);
     }
